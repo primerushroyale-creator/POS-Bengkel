@@ -309,3 +309,96 @@ BEGIN
     RETURN TRUE;
 END;
 $$;
+
+-- ==============================================================================
+-- [MIGRATION 20260903] ROW LEVEL SECURITY (RLS) & ROLE-BASED ACCESS CONTROL
+-- ==============================================================================
+
+-- Helper Function: Dapatkan role aktif user
+CREATE OR REPLACE FUNCTION auth_user_role()
+RETURNS VARCHAR
+LANGUAGE plpgsql
+SECURITY DEFINER
+STABLE
+AS $$
+DECLARE
+    v_role VARCHAR;
+BEGIN
+    BEGIN
+        v_role := current_setting('request.jwt.claims', true)::jsonb->>'role';
+        IF v_role IS NOT NULL AND v_role <> '' THEN
+            RETURN v_role;
+        END IF;
+    EXCEPTION WHEN OTHERS THEN
+        NULL;
+    END;
+
+    BEGIN
+        v_role := current_setting('request.jwt.claims', true)::jsonb->'app_metadata'->>'role';
+        IF v_role IS NOT NULL AND v_role <> '' THEN
+            RETURN v_role;
+        END IF;
+    EXCEPTION WHEN OTHERS THEN
+        NULL;
+    END;
+
+    BEGIN
+        SELECT role INTO v_role FROM users WHERE id = auth.uid() AND is_active = TRUE;
+        IF v_role IS NOT NULL THEN
+            RETURN v_role;
+        END IF;
+    EXCEPTION WHEN OTHERS THEN
+        NULL;
+    END;
+
+    RETURN 'anon';
+END;
+$$;
+
+-- Aktifkan RLS
+ALTER TABLE users ENABLE ROW LEVEL SECURITY;
+ALTER TABLE products ENABLE ROW LEVEL SECURITY;
+ALTER TABLE vehicles ENABLE ROW LEVEL SECURITY;
+ALTER TABLE transactions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE transaction_details ENABLE ROW LEVEL SECURITY;
+ALTER TABLE work_orders ENABLE ROW LEVEL SECURITY;
+ALTER TABLE audit_logs ENABLE ROW LEVEL SECURITY;
+
+-- Policies Products
+CREATE POLICY "products_select_policy" ON products FOR SELECT USING (auth_user_role() IN ('admin', 'kasir', 'mekanik'));
+CREATE POLICY "products_insert_policy" ON products FOR INSERT WITH CHECK (auth_user_role() = 'admin');
+CREATE POLICY "products_update_policy" ON products FOR UPDATE USING (auth_user_role() = 'admin');
+CREATE POLICY "products_delete_policy" ON products FOR DELETE USING (auth_user_role() = 'admin');
+
+-- Policies Transactions (Mekanik DITOLAK dari membaca / menulis transaksi kasir)
+CREATE POLICY "transactions_select_policy" ON transactions FOR SELECT USING (auth_user_role() IN ('admin', 'kasir'));
+CREATE POLICY "transactions_insert_policy" ON transactions FOR INSERT WITH CHECK (auth_user_role() IN ('admin', 'kasir'));
+CREATE POLICY "transactions_update_policy" ON transactions FOR UPDATE USING (auth_user_role() = 'admin');
+
+-- Policies Transaction Details
+CREATE POLICY "td_select_policy" ON transaction_details FOR SELECT USING (auth_user_role() IN ('admin', 'kasir'));
+CREATE POLICY "td_insert_policy" ON transaction_details FOR INSERT WITH CHECK (auth_user_role() IN ('admin', 'kasir'));
+CREATE POLICY "td_update_policy" ON transaction_details FOR UPDATE USING (auth_user_role() = 'admin');
+
+-- Policies Vehicles
+CREATE POLICY "vehicles_select_policy" ON vehicles FOR SELECT USING (auth_user_role() IN ('admin', 'kasir', 'mekanik'));
+CREATE POLICY "vehicles_insert_policy" ON vehicles FOR INSERT WITH CHECK (auth_user_role() IN ('admin', 'kasir'));
+CREATE POLICY "vehicles_update_policy" ON vehicles FOR UPDATE USING (auth_user_role() IN ('admin', 'kasir'));
+CREATE POLICY "vehicles_delete_policy" ON vehicles FOR DELETE USING (auth_user_role() = 'admin');
+
+-- Policies Work Orders (Hak Sah Mekanik)
+CREATE POLICY "wo_select_policy" ON work_orders FOR SELECT USING (auth_user_role() IN ('admin', 'kasir', 'mekanik'));
+CREATE POLICY "wo_insert_policy" ON work_orders FOR INSERT WITH CHECK (auth_user_role() IN ('admin', 'kasir'));
+CREATE POLICY "wo_update_policy" ON work_orders FOR UPDATE USING (auth_user_role() IN ('admin', 'kasir', 'mekanik'));
+CREATE POLICY "wo_delete_policy" ON work_orders FOR DELETE USING (auth_user_role() = 'admin');
+
+-- Policies Audit Logs
+CREATE POLICY "audit_select_policy" ON audit_logs FOR SELECT USING (auth_user_role() = 'admin');
+CREATE POLICY "audit_insert_policy" ON audit_logs FOR INSERT WITH CHECK (true);
+
+-- Policies Users
+CREATE POLICY "users_select_policy" ON users FOR SELECT USING (auth_user_role() IN ('admin', 'kasir', 'mekanik'));
+CREATE POLICY "users_insert_policy" ON users FOR INSERT WITH CHECK (auth_user_role() = 'admin');
+CREATE POLICY "users_update_policy" ON users FOR UPDATE USING (auth_user_role() = 'admin');
+CREATE POLICY "users_delete_policy" ON users FOR DELETE USING (auth_user_role() = 'admin');
+

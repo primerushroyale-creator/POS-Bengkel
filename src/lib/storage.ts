@@ -711,6 +711,18 @@ export const BengkelStorage = {
   getTransactions: (): Transaction[] => getItem(KEYS.TRANSACTIONS, INITIAL_TRANSACTIONS),
   
   checkout: (payload: CheckoutPayload): { success: boolean; transaction?: Transaction; error?: string } => {
+    // 0. ROLE VALIDATION: Mekanik cannot checkout
+    if (payload.cashier_id) {
+      const users = BengkelStorage.getUsers();
+      const user = users.find((u) => u.id === payload.cashier_id);
+      if (user && user.role === 'mekanik') {
+        return {
+          success: false,
+          error: 'Akses ditolak: User dengan role mekanik tidak memiliki izin memproses transaksi kasir.',
+        };
+      }
+    }
+
     const products = BengkelStorage.getProducts();
 
     // 1. ATOMIC VALIDATION: Check stock sufficiency for ALL items before deducting anything
@@ -814,6 +826,18 @@ export const BengkelStorage = {
     userId?: string,
     userName?: string
   ): { success: boolean; error?: string } => {
+    // 0. ROLE VALIDATION: Only Admin can void
+    if (userId) {
+      const users = BengkelStorage.getUsers();
+      const user = users.find((u) => u.id === userId);
+      if (user && user.role !== 'admin') {
+        return {
+          success: false,
+          error: 'Akses ditolak: Hanya role Admin / Owner yang berwenang membatalkan transaksi (Void).',
+        };
+      }
+    }
+
     const transactions = BengkelStorage.getTransactions();
     const tx = transactions.find((t) => t.id === transactionId);
 
