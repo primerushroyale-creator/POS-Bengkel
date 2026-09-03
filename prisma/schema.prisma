@@ -1,0 +1,156 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  admin
+  kasir
+  mekanik
+}
+
+enum ProductCategory {
+  barang
+  jasa
+}
+
+enum PaymentMethod {
+  tunai
+  qris
+  transfer
+}
+
+enum TransactionStatus {
+  completed
+  void
+}
+
+enum WorkOrderStatus {
+  pending
+  in_progress
+  completed
+  cancelled
+}
+
+model User {
+  id              String         @id @default(uuid())
+  name            String
+  role            Role           @default(kasir)
+  pinHash         String         @map("pin_hash")
+  phone           String?
+  isActive        Boolean        @default(true) @map("is_active")
+  createdAt       DateTime       @default(now()) @map("created_at")
+  transactions    Transaction[]  @relation("CashierTransactions")
+  voidedTx        Transaction[]  @relation("VoidedTransactions")
+  workOrders      WorkOrder[]    @relation("MechanicWorkOrders")
+  auditLogs       AuditLog[]
+
+  @@map("users")
+}
+
+model Product {
+  id              String            @id @default(uuid())
+  code            String            @unique
+  name            String
+  category        ProductCategory
+  subCategory     String?           @default("Umum") @map("sub_category")
+  price           Float
+  costPrice       Float?            @default(0) @map("cost_price")
+  stock           Int               @default(0)
+  minStock        Int               @default(3) @map("min_stock")
+  unit            String?           @default("Pcs")
+  isActive        Boolean           @default(true) @map("is_active")
+  createdAt       DateTime          @default(now()) @map("created_at")
+  updatedAt       DateTime          @updatedAt @map("updated_at")
+  details         TransactionDetail[]
+
+  @@map("products")
+}
+
+model Vehicle {
+  id              String        @id @default(uuid())
+  plateNumber     String        @unique @map("plate_number")
+  ownerName       String        @map("owner_name")
+  ownerPhone      String?       @map("owner_phone")
+  vehicleType     String        @map("vehicle_type")
+  notes           String?
+  lastServiceDate DateTime?     @map("last_service_date")
+  createdAt       DateTime      @default(now()) @map("created_at")
+  transactions    Transaction[]
+  workOrders      WorkOrder[]
+
+  @@map("vehicles")
+}
+
+model Transaction {
+  id              String             @id @default(uuid())
+  invoiceNo       String             @unique @map("invoice_no")
+  cashierId       String?            @map("cashier_id")
+  cashier         User?              @relation("CashierTransactions", fields: [cashierId], references: [id])
+  vehicleId       String?            @map("vehicle_id")
+  vehicle         Vehicle?           @relation(fields: [vehicleId], references: [id])
+  totalAmount     Float              @map("total_amount")
+  discountAmount  Float              @default(0) @map("discount_amount")
+  cashGiven       Float              @default(0) @map("cash_given")
+  changeAmount    Float              @default(0) @map("change_amount")
+  paymentMethod   PaymentMethod      @default(tunai) @map("payment_method")
+  status          TransactionStatus  @default(completed)
+  voidReason      String?            @map("void_reason")
+  voidedAt        DateTime?          @map("voided_at")
+  voidedById      String?            @map("voided_by")
+  voidedBy        User?              @relation("VoidedTransactions", fields: [voidedById], references: [id])
+  notes           String?
+  createdAt       DateTime           @default(now()) @map("created_at")
+  details         TransactionDetail[]
+
+  @@map("transactions")
+}
+
+model TransactionDetail {
+  id             String       @id @default(uuid())
+  transactionId  String       @map("transaction_id")
+  transaction    Transaction  @relation(fields: [transactionId], references: [id], onDelete: Cascade)
+  productId      String       @map("product_id")
+  product        Product      @relation(fields: [productId], references: [id])
+  qty            Int
+  priceAtSale    Float        @map("price_at_sale")
+  costAtSale     Float?       @default(0) @map("cost_at_sale")
+  subtotal       Float
+  createdAt      DateTime     @default(now()) @map("created_at")
+
+  @@map("transaction_details")
+}
+
+model WorkOrder {
+  id          String           @id @default(uuid())
+  invoiceNo   String?          @map("invoice_no")
+  vehicleId   String           @map("vehicle_id")
+  vehicle     Vehicle          @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+  mechanicId  String?          @map("mechanic_id")
+  mechanic    User?            @relation("MechanicWorkOrders", fields: [mechanicId], references: [id])
+  status      WorkOrderStatus  @default(pending)
+  mileage     Int?             @default(0)
+  complaint   String?
+  diagnosis   String?
+  notes       String?
+  startedAt   DateTime?        @map("started_at")
+  completedAt DateTime?        @map("completed_at")
+  createdAt   DateTime         @default(now()) @map("created_at")
+
+  @@map("work_orders")
+}
+
+model AuditLog {
+  id        String    @id @default(uuid())
+  userId    String?   @map("user_id")
+  user      User?     @relation(fields: [userId], references: [id])
+  action    String
+  details   Json?
+  createdAt DateTime  @default(now()) @map("created_at")
+
+  @@map("audit_logs")
+}
