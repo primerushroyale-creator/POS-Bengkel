@@ -16,6 +16,7 @@ import {
 import { cn } from '@/lib/utils';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { Role } from '@/types';
+import { SidebarInstallBanner } from '@/components/pwa/InstallPrompt';
 
 interface NavItem {
   label: string;
@@ -74,8 +75,9 @@ export const DesktopSidebar: React.FC = () => {
         })}
       </div>
 
-      {/* Info Card at bottom of sidebar */}
+      {/* Info Card & Install Card at bottom of sidebar */}
       <div className="mt-auto pt-4 border-t border-slate-100">
+        <SidebarInstallBanner />
         <div className="p-3.5 bg-gradient-to-br from-indigo-50/70 to-slate-50 border border-indigo-100/60 rounded-2xl">
           <div className="flex items-center gap-2 mb-1">
             <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />

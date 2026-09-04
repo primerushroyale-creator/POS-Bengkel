@@ -5,6 +5,15 @@ import { AppShell } from '@/components/layout/AppShell';
 export const metadata: Metadata = {
   title: 'Bengkel POS & Management System',
   description: 'Sistem Kasir & Manajemen Bengkel Modern Mobile-First',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'default',
+    title: 'BengkelPOS',
+  },
+  icons: {
+    icon: '/icon-192.png',
+    apple: '/apple-touch-icon.png',
+  },
 };
 
 export const viewport: Viewport = {
@@ -12,6 +21,7 @@ export const viewport: Viewport = {
   initialScale: 1,
   maximumScale: 1,
   userScalable: false,
+  themeColor: '#4f46e5',
 };
 
 export default function RootLayout({

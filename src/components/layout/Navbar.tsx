@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import { useDataStore } from '@/stores/useDataStore';
 import { formatDateIndo } from '@/lib/utils';
+import { NavbarInstallButton } from '@/components/pwa/InstallPrompt';
 
 export const Navbar: React.FC = () => {
   const { currentUser, setPinModalOpen } = useAuthStore();
@@ -86,6 +87,7 @@ export const Navbar: React.FC = () => {
 
         {/* Right Section: User Info & PIN Switcher */}
         <div className="flex items-center gap-2 sm:gap-3">
+          <NavbarInstallButton />
           {currentUser ? (
             <button
               onClick={() => setPinModalOpen(true)}
