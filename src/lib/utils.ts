@@ -18,7 +18,20 @@ export function formatRupiah(amount: number | string | null | undefined): string
   }).format(numericAmount);
 }
 
-export function parseRupiah(formatted: string): number {
+/**
+ * Memformat angka menjadi format ribuan Indonesia tanpa simbol 'Rp' (contoh: 50000 -> "50.000")
+ * Cocok untuk input form realtime.
+ */
+export function formatRibuan(value: number | string | null | undefined): string {
+  if (value === null || value === undefined || value === '') return '';
+  const num = typeof value === 'string' ? parseRupiah(value) : Math.round(value);
+  if (isNaN(num) || num === 0) return '';
+  return new Intl.NumberFormat('id-ID').format(num);
+}
+
+export function parseRupiah(formatted: string | number | null | undefined): number {
+  if (formatted === null || formatted === undefined) return 0;
+  if (typeof formatted === 'number') return Math.round(formatted);
   const clean = formatted.replace(/[^0-9]/g, '');
   return clean ? parseInt(clean, 10) : 0;
 }

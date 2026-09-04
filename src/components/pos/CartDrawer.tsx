@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { useCartStore } from '@/stores/useCartStore';
-import { formatRupiah } from '@/lib/utils';
+import { formatRupiah, formatRibuan, parseRupiah } from '@/lib/utils';
 import {
   ShoppingCart,
   Trash2,
@@ -186,11 +186,12 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
             {showDiscountInput && (
               <div className="mt-2 space-y-2 animate-in fade-in duration-150">
                 <input
-                  type="number"
+                  type="text"
+                  inputMode="numeric"
                   placeholder="Nominal Diskon (Rp)"
-                  value={discount || ''}
-                  onChange={(e) => setDiscount(Number(e.target.value))}
-                  className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                  value={discount > 0 ? formatRibuan(discount) : ''}
+                  onChange={(e) => setDiscount(parseRupiah(e.target.value))}
+                  className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs font-bold text-slate-800 focus:ring-2 focus:ring-indigo-500 focus:outline-none"
                 />
                 <div className="flex gap-1.5">
                   {[5000, 10000, 20000, 50000].map((preset) => (

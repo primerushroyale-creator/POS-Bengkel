@@ -5,7 +5,7 @@ import { Modal } from '@/components/ui/Modal';
 import { useCartStore } from '@/stores/useCartStore';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { useToastStore } from '@/stores/useToastStore';
-import { formatRupiah, parseRupiah } from '@/lib/utils';
+import { formatRupiah, formatRibuan, parseRupiah } from '@/lib/utils';
 import { BengkelStorage } from '@/lib/storage';
 import { PaymentMethod, Transaction } from '@/types';
 import {
@@ -40,7 +40,6 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
 
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('tunai');
   const [cashGiven, setCashGiven] = useState<number>(total);
-  const [cashInputRaw, setCashInputRaw] = useState<string>('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [idempotencyKey, setIdempotencyKey] = useState<string>('');
   const isSubmittingRef = React.useRef(false);
@@ -48,7 +47,6 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
   useEffect(() => {
     if (isOpen) {
       setCashGiven(total);
-      setCashInputRaw(total.toString());
       setPaymentMethod('tunai');
       setIsSubmitting(false);
       isSubmittingRef.current = false;
@@ -66,18 +64,14 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
   const handleCashChange = (val: string) => {
     const numeric = parseRupiah(val);
     setCashGiven(numeric);
-    setCashInputRaw(numeric > 0 ? numeric.toString() : '');
   };
 
   const setExactCash = () => {
     setCashGiven(total);
-    setCashInputRaw(total.toString());
   };
 
   const addCashAmount = (amount: number) => {
-    const next = (cashGiven || 0) + amount;
-    setCashGiven(next);
-    setCashInputRaw(next.toString());
+    setCashGiven((prev) => (prev || 0) + amount);
   };
 
   const handleProcessCheckout = async () => {
@@ -213,8 +207,9 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
               </label>
               <div className="relative">
                 <input
-                  type="number"
-                  value={cashInputRaw}
+                  type="text"
+                  inputMode="numeric"
+                  value={cashGiven > 0 ? formatRibuan(cashGiven) : ''}
                   onChange={(e) => handleCashChange(e.target.value)}
                   placeholder="0"
                   className="w-full pl-4 pr-4 py-3 bg-white border border-slate-300 rounded-xl text-lg font-bold text-slate-900 focus:ring-2 focus:ring-indigo-500 focus:outline-none min-h-[48px]"

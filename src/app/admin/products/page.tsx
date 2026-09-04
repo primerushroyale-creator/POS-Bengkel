@@ -3,7 +3,7 @@
 import React, { useState, useMemo } from 'react';
 import { Product, ProductCategory } from '@/types';
 import { BengkelStorage } from '@/lib/storage';
-import { formatRupiah, parseRupiah } from '@/lib/utils';
+import { formatRupiah, formatRibuan, parseRupiah } from '@/lib/utils';
 import { Badge } from '@/components/ui/Badge';
 import { Modal } from '@/components/ui/Modal';
 import { useToastStore } from '@/stores/useToastStore';
@@ -87,8 +87,8 @@ export default function ProductsManagementPage() {
     setFormName(p.name);
     setFormCategory(p.category);
     setFormSubCategory(p.sub_category || '');
-    setFormPrice(p.price.toString());
-    setFormCostPrice(p.cost_price ? p.cost_price.toString() : '0');
+    setFormPrice(formatRibuan(p.price));
+    setFormCostPrice(p.cost_price ? formatRibuan(p.cost_price) : '');
     setFormStock(p.stock);
     setFormMinStock(p.min_stock);
     setFormUnit(p.unit || (p.category === 'jasa' ? 'Jasa' : 'Pcs'));
@@ -476,21 +476,29 @@ export default function ProductsManagementPage() {
             <div>
               <label className="block text-xs font-bold text-slate-700 mb-1">Harga Jual (Rp) *</label>
               <input
-                type="number"
+                type="text"
+                inputMode="numeric"
                 required
-                placeholder="55000"
+                placeholder="55.000"
                 value={formPrice}
-                onChange={(e) => setFormPrice(e.target.value)}
+                onChange={(e) => {
+                  const raw = e.target.value.replace(/[^0-9]/g, '');
+                  setFormPrice(raw ? new Intl.NumberFormat('id-ID').format(Number(raw)) : '');
+                }}
                 className="w-full px-3.5 py-2.5 font-bold text-indigo-600 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"
               />
             </div>
             <div>
               <label className="block text-xs font-bold text-slate-700 mb-1">Harga Modal / Beli (Rp)</label>
               <input
-                type="number"
-                placeholder="42000"
+                type="text"
+                inputMode="numeric"
+                placeholder="42.000"
                 value={formCostPrice}
-                onChange={(e) => setFormCostPrice(e.target.value)}
+                onChange={(e) => {
+                  const raw = e.target.value.replace(/[^0-9]/g, '');
+                  setFormCostPrice(raw ? new Intl.NumberFormat('id-ID').format(Number(raw)) : '');
+                }}
                 className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"
               />
             </div>
