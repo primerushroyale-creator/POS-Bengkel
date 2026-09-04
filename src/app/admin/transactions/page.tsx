@@ -5,6 +5,7 @@ import { Transaction } from '@/types';
 import { BengkelStorage } from '@/lib/storage';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { useToastStore } from '@/stores/useToastStore';
+import { useDataStore } from '@/stores/useDataStore';
 import { formatRupiah, formatDateIndo } from '@/lib/utils';
 import { Badge } from '@/components/ui/Badge';
 import { Modal } from '@/components/ui/Modal';
@@ -25,6 +26,7 @@ import { cn } from '@/lib/utils';
 export default function TransactionsReportPage() {
   const { currentUser } = useAuthStore();
   const { success, error } = useToastStore();
+  const { transactions } = useDataStore();
 
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'completed' | 'void'>('all');
@@ -39,7 +41,6 @@ export default function TransactionsReportPage() {
 
   // Trigger re-renders
   const [refreshKey, setRefreshKey] = useState(0);
-  const transactions = BengkelStorage.getTransactions();
 
   const filteredTransactions = useMemo(() => {
     return transactions.filter((tx) => {

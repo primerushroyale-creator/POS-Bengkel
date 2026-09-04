@@ -4,6 +4,7 @@ import React, { useState, useMemo } from 'react';
 import { Product, Vehicle, Transaction } from '@/types';
 import { BengkelStorage } from '@/lib/storage';
 import { useCartStore } from '@/stores/useCartStore';
+import { useDataStore } from '@/stores/useDataStore';
 import { formatRupiah } from '@/lib/utils';
 import { ProductCard } from '@/components/pos/ProductCard';
 import { CartDrawer } from '@/components/pos/CartDrawer';
@@ -45,7 +46,8 @@ export default function PosPage() {
     getTotal,
   } = useCartStore();
 
-  const products = BengkelStorage.getProducts();
+  // Reactive Realtime Products Data Store
+  const { products } = useDataStore();
 
   // Category list
   const categories = [

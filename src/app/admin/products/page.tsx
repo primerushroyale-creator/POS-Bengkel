@@ -7,6 +7,7 @@ import { formatRupiah, parseRupiah } from '@/lib/utils';
 import { Badge } from '@/components/ui/Badge';
 import { Modal } from '@/components/ui/Modal';
 import { useToastStore } from '@/stores/useToastStore';
+import { useDataStore } from '@/stores/useDataStore';
 import {
   Package,
   Wrench,
@@ -22,6 +23,7 @@ import { cn } from '@/lib/utils';
 
 export default function ProductsManagementPage() {
   const { success, error } = useToastStore();
+  const { products } = useDataStore();
   const [search, setSearch] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -40,7 +42,6 @@ export default function ProductsManagementPage() {
 
   // Trigger re-render on data change
   const [refreshKey, setRefreshKey] = useState(0);
-  const products = BengkelStorage.getProducts();
 
   const filteredProducts = useMemo(() => {
     return products.filter((p) => {

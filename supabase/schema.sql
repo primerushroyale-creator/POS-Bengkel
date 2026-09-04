@@ -402,3 +402,24 @@ CREATE POLICY "users_insert_policy" ON users FOR INSERT WITH CHECK (auth_user_ro
 CREATE POLICY "users_update_policy" ON users FOR UPDATE USING (auth_user_role() = 'admin');
 CREATE POLICY "users_delete_policy" ON users FOR DELETE USING (auth_user_role() = 'admin');
 
+-- ==============================================================================
+-- [MIGRATION 20260903] SUPABASE REALTIME REPLICATION (CROSS-DEVICE SYNC)
+-- ==============================================================================
+ALTER TABLE products REPLICA IDENTITY FULL;
+ALTER TABLE transactions REPLICA IDENTITY FULL;
+ALTER TABLE transaction_details REPLICA IDENTITY FULL;
+ALTER TABLE work_orders REPLICA IDENTITY FULL;
+
+DO $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM pg_publication WHERE pubname = 'supabase_realtime') THEN
+        BEGIN
+            ALTER PUBLICATION supabase_realtime ADD TABLE products, transactions, transaction_details, work_orders;
+        EXCEPTION WHEN OTHERS THEN
+            NULL;
+        END;
+    END IF;
+END;
+$$;
+
+

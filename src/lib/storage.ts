@@ -578,6 +578,18 @@ function setItem<T>(key: string, value: T): void {
   if (typeof window === 'undefined') return;
   try {
     window.localStorage.setItem(key, JSON.stringify(value));
+
+    // Broadcast across browser tabs and devices in the same session
+    try {
+      if (typeof BroadcastChannel !== 'undefined') {
+        const bc = new BroadcastChannel('bengkel_realtime_sync');
+        bc.postMessage({ key, timestamp: Date.now() });
+        bc.close();
+      }
+    } catch {}
+
+    // Dispatch DOM event for same-tab reactive components
+    window.dispatchEvent(new CustomEvent('bengkel_storage_changed', { detail: { key } }));
   } catch (err) {
     console.error('LocalStorage save error:', err);
   }

@@ -17,36 +17,38 @@ import {
   Car,
   Package,
 } from 'lucide-react';
+import { useDataStore } from '@/stores/useDataStore';
 import { formatDateIndo } from '@/lib/utils';
 
 export const Navbar: React.FC = () => {
   const { currentUser, setPinModalOpen } = useAuthStore();
+  const { isRealtimeConnected, lastSyncedAt } = useDataStore();
   const [time, setTime] = useState<string>('');
 
   useEffect(() => {
-    const update = () => {
+    const updateTime = () => {
       const now = new Date();
       setTime(
         now.toLocaleTimeString('id-ID', {
           hour: '2-digit',
           minute: '2-digit',
           second: '2-digit',
-          hour12: false,
         })
       );
     };
-    update();
-    const interval = setInterval(update, 1000);
-    return () => clearInterval(interval);
+
+    updateTime();
+    const timer = setInterval(updateTime, 1000);
+    return () => clearInterval(timer);
   }, []);
 
   return (
-    <header className="sticky top-0 z-40 bg-white/90 backdrop-blur-md border-b border-slate-200/80 shadow-soft-sm">
+    <header className="sticky top-0 z-30 bg-white/95 backdrop-blur-md border-b border-slate-200/80 shadow-soft-sm">
       <div className="max-w-7xl mx-auto px-3 sm:px-6 h-16 flex items-center justify-between gap-2">
-        {/* Brand Logo & Name */}
-        <Link href="/pos" className="flex items-center gap-2.5 group select-none">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 to-indigo-500 flex items-center justify-center text-white shadow-md shadow-indigo-200 group-hover:scale-105 transition-transform">
-            <Wrench className="w-5 h-5 stroke-[2.2]" />
+        {/* Left: Brand Logo & Title */}
+        <Link href="/" className="flex items-center gap-2.5 group">
+          <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-indigo-600 to-indigo-700 flex items-center justify-center text-white shadow-soft group-hover:scale-105 transition-transform">
+            <Wrench className="w-5 h-5 transition-transform group-hover:rotate-12" />
           </div>
           <div className="flex flex-col">
             <div className="flex items-center gap-1.5">
@@ -63,10 +65,23 @@ export const Navbar: React.FC = () => {
           </div>
         </Link>
 
-        {/* Center Live Clock */}
-        <div className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-50 border border-slate-200/60 text-slate-600 text-xs font-mono font-medium">
-          <Clock className="w-3.5 h-3.5 text-indigo-500" />
-          <span>{time || '00:00:00'} WIB</span>
+        {/* Center: Live Clock & Realtime Sync Indicator */}
+        <div className="hidden md:flex items-center gap-2.5">
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-50 border border-slate-200/60 text-slate-600 text-xs font-mono font-medium">
+            <Clock className="w-3.5 h-3.5 text-indigo-500" />
+            <span>{time || '00:00:00'} WIB</span>
+          </div>
+
+          <div
+            className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50 border border-emerald-200/70 text-emerald-700 text-[11px] font-medium"
+            title={lastSyncedAt ? `Sinkronisasi terakhir: ${lastSyncedAt}` : 'Realtime Sync Aktif'}
+          >
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+            </span>
+            <span className="font-semibold">Live Sync</span>
+          </div>
         </div>
 
         {/* Right Section: User Info & PIN Switcher */}

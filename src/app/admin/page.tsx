@@ -6,6 +6,7 @@ import { BengkelStorage } from '@/lib/storage';
 import { DashboardStats, Product, Transaction } from '@/types';
 import { formatRupiah, formatDateIndo } from '@/lib/utils';
 import { Badge } from '@/components/ui/Badge';
+import { useDataStore } from '@/stores/useDataStore';
 import {
   TrendingUp,
   DollarSign,
@@ -22,16 +23,12 @@ import {
 import { cn } from '@/lib/utils';
 
 export default function AdminDashboardPage() {
-  const [stats, setStats] = useState<DashboardStats | null>(null);
+  const { stats: storeStats, refreshData, isLoading } = useDataStore();
+  const stats = storeStats || BengkelStorage.getDashboardStats();
 
-  const loadData = () => {
-    const data = BengkelStorage.getDashboardStats();
-    setStats(data);
+  const handleRefresh = async () => {
+    await refreshData();
   };
-
-  useEffect(() => {
-    loadData();
-  }, []);
 
   if (!stats) return null;
 
@@ -49,11 +46,12 @@ export default function AdminDashboardPage() {
         </div>
 
         <button
-          onClick={loadData}
-          className="flex items-center gap-2 px-3.5 py-2 bg-white border border-slate-200/80 hover:bg-slate-50 rounded-xl text-xs font-bold text-slate-700 shadow-soft-sm self-start transition-all"
+          onClick={handleRefresh}
+          disabled={isLoading}
+          className="flex items-center gap-2 px-3.5 py-2 bg-white border border-slate-200/80 hover:bg-slate-50 rounded-xl text-xs font-bold text-slate-700 shadow-soft-sm self-start transition-all disabled:opacity-50"
         >
-          <RefreshCw className="w-3.5 h-3.5" />
-          <span>Refresh Data</span>
+          <RefreshCw className={cn("w-3.5 h-3.5", isLoading && "animate-spin text-indigo-600")} />
+          <span>{isLoading ? 'Menyinkronkan...' : 'Refresh Data'}</span>
         </button>
       </div>
 

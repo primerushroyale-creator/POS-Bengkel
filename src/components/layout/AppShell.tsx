@@ -9,6 +9,7 @@ import { ToastContainer } from '@/components/ui/Toast';
 import { BengkelStorage } from '@/lib/storage';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { useToastStore } from '@/stores/useToastStore';
+import { useDataStore } from '@/stores/useDataStore';
 import { ShieldAlert } from 'lucide-react';
 
 export const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -20,6 +21,11 @@ export const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) 
   useEffect(() => {
     // Initialize Local Storage database if needed
     BengkelStorage.init();
+    // Initialize Realtime Sync across devices and browser tabs
+    const cleanup = useDataStore.getState().initRealtimeSubscription();
+    return () => {
+      cleanup();
+    };
   }, []);
 
   const userRole = currentUser?.role || 'kasir';
