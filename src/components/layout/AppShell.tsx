@@ -67,7 +67,7 @@ export const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) 
     <div className="min-h-screen bg-[#f8fafc] text-slate-900 flex flex-col font-sans antialiased">
       <Navbar />
 
-      <div className="flex-1 flex max-w-7xl w-full mx-auto">
+      <div className="flex-1 flex w-full max-w-[1700px] mx-auto px-1 sm:px-4">
         <DesktopSidebar />
         <main className="flex-1 min-w-0 p-3 sm:p-6 pb-24 lg:pb-8 overflow-x-hidden">
           {isAllowed ? (

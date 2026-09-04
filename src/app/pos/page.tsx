@@ -169,8 +169,8 @@ export default function PosPage() {
           })}
         </div>
 
-        {/* Product Grid: 2 columns on Mobile, 3-4 columns on Desktop */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">
+        {/* Product Grid: 2 columns on Mobile, 3-5 columns on Desktop */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-3 sm:gap-4">
           {filteredProducts.length > 0 ? (
             filteredProducts.map((product) => {
               const inCart = items.find((i) => i.product.id === product.id);
