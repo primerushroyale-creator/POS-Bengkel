@@ -1,5 +1,8 @@
 'use client';
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 import React, { useState, useMemo } from 'react';
 import { WorkOrder, WorkOrderStatus, Vehicle } from '@/types';
 import { BengkelStorage } from '@/lib/storage';
@@ -7,6 +10,7 @@ import { formatDateIndo } from '@/lib/utils';
 import { Badge } from '@/components/ui/Badge';
 import { Modal } from '@/components/ui/Modal';
 import { useToastStore } from '@/stores/useToastStore';
+import { useDataStore } from '@/stores/useDataStore';
 import {
   ClipboardList,
   Plus,
@@ -38,9 +42,12 @@ export default function WorkOrdersPage() {
   const [diagnosis, setDiagnosis] = useState('');
   const [notes, setNotes] = useState('');
 
-  const [refreshKey, setRefreshKey] = useState(0);
-  const workOrders = BengkelStorage.getWorkOrders();
-  const vehicles = BengkelStorage.getVehicles();
+  const {
+    workOrders,
+    vehicles,
+    saveWorkOrder,
+    updateWorkOrderStatus,
+  } = useDataStore();
   const users = BengkelStorage.getUsers();
   const mechanics = users.filter((u) => u.role === 'mekanik' || u.role === 'admin');
 
@@ -58,7 +65,7 @@ export default function WorkOrdersPage() {
       }
       return true;
     });
-  }, [workOrders, statusFilter, search, refreshKey]);
+  }, [workOrders, statusFilter, search]);
 
   const handleOpenAddModal = () => {
     setEditingOrder(null);
@@ -71,7 +78,7 @@ export default function WorkOrdersPage() {
     setIsModalOpen(true);
   };
 
-  const handleSaveWorkOrder = (e: React.FormEvent) => {
+  const handleSaveWorkOrder = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedVehicleId) {
       error('Pilih kendaraan untuk SPK Servis!');
@@ -81,7 +88,7 @@ export default function WorkOrdersPage() {
     const veh = vehicles.find((v) => v.id === selectedVehicleId);
     const mech = mechanics.find((m) => m.id === selectedMechanicId);
 
-    BengkelStorage.saveWorkOrder({
+    await saveWorkOrder({
       id: editingOrder ? editingOrder.id : undefined,
       vehicle_id: selectedVehicleId,
       vehicle_plate: veh?.plate_number,
@@ -97,13 +104,11 @@ export default function WorkOrdersPage() {
 
     success(editingOrder ? 'SPK Servis diperbarui!' : 'SPK Servis baru dibuat!');
     setIsModalOpen(false);
-    setRefreshKey((prev) => prev + 1);
   };
 
-  const handleStatusChange = (id: string, newStatus: WorkOrderStatus) => {
-    BengkelStorage.updateWorkOrderStatus(id, newStatus);
+  const handleStatusChange = async (id: string, newStatus: WorkOrderStatus) => {
+    await updateWorkOrderStatus(id, newStatus);
     success(`Status SPK diubah menjadi ${newStatus.toUpperCase()}`);
-    setRefreshKey((prev) => prev + 1);
   };
 
   return (

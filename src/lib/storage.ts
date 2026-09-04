@@ -619,6 +619,12 @@ export const BengkelStorage = {
     }
   },
 
+  // Direct Collection Setters (for cloud sync)
+  setProducts: (products: Product[]) => setItem(KEYS.PRODUCTS, products),
+  setTransactions: (transactions: Transaction[]) => setItem(KEYS.TRANSACTIONS, transactions),
+  setWorkOrders: (workOrders: WorkOrder[]) => setItem(KEYS.WORK_ORDERS, workOrders),
+  setVehicles: (vehicles: Vehicle[]) => setItem(KEYS.VEHICLES, vehicles),
+
   // USERS
   getUsers: (): User[] => getItem(KEYS.USERS, INITIAL_USERS),
   findUserByPin: (pin: string): User | undefined => {

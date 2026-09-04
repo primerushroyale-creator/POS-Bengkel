@@ -7,6 +7,7 @@ import { useAuthStore } from '@/stores/useAuthStore';
 import { useToastStore } from '@/stores/useToastStore';
 import { formatRupiah, formatRibuan, parseRupiah } from '@/lib/utils';
 import { BengkelStorage } from '@/lib/storage';
+import { useDataStore } from '@/stores/useDataStore';
 import { PaymentMethod, Transaction } from '@/types';
 import {
   Banknote,
@@ -35,6 +36,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
   const { items, selectedVehicle, discount, notes, getTotal, clearCart } = useCartStore();
   const { currentUser } = useAuthStore();
   const { success, error } = useToastStore();
+  const { checkout } = useDataStore();
 
   const total = getTotal();
 
@@ -95,7 +97,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
       // Simulate network processing buffer for visual feedback & race-condition prevention
       await new Promise((resolve) => setTimeout(resolve, 350));
 
-      const result = BengkelStorage.checkout({
+      const result = await checkout({
         cashier_id: currentUser?.id,
         cashier_name: currentUser?.name || 'Kasir',
         vehicle_id: selectedVehicle?.id,

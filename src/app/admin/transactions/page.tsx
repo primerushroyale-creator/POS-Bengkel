@@ -1,5 +1,8 @@
 'use client';
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 import React, { useState, useMemo } from 'react';
 import { Transaction } from '@/types';
 import { BengkelStorage } from '@/lib/storage';
@@ -26,7 +29,7 @@ import { cn } from '@/lib/utils';
 export default function TransactionsReportPage() {
   const { currentUser } = useAuthStore();
   const { success, error } = useToastStore();
-  const { transactions } = useDataStore();
+  const { transactions, voidTransaction } = useDataStore();
 
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'completed' | 'void'>('all');
@@ -38,9 +41,6 @@ export default function TransactionsReportPage() {
   const [voidReason, setVoidReason] = useState('');
   const [isVoiding, setIsVoiding] = useState(false);
   const [isReceiptModalOpen, setIsReceiptModalOpen] = useState(false);
-
-  // Trigger re-renders
-  const [refreshKey, setRefreshKey] = useState(0);
 
   const filteredTransactions = useMemo(() => {
     return transactions.filter((tx) => {
@@ -63,7 +63,7 @@ export default function TransactionsReportPage() {
 
       return true;
     });
-  }, [transactions, statusFilter, dateFilter, search, refreshKey]);
+  }, [transactions, statusFilter, dateFilter, search]);
 
   // Aggregate stats of filtered
   const totalRevenue = filteredTransactions
@@ -75,7 +75,7 @@ export default function TransactionsReportPage() {
     setVoidReason('');
   };
 
-  const handleConfirmVoid = () => {
+  const handleConfirmVoid = async () => {
     if (!selectedTxForVoid) return;
     if (!voidReason.trim()) {
       error('Alasan pembatalan (void) wajib diisi!');
@@ -83,7 +83,7 @@ export default function TransactionsReportPage() {
     }
 
     setIsVoiding(true);
-    const result = BengkelStorage.voidTransaction(
+    const result = await voidTransaction(
       selectedTxForVoid.id,
       voidReason,
       currentUser?.id,
@@ -94,7 +94,6 @@ export default function TransactionsReportPage() {
     if (result.success) {
       success(`Nota ${selectedTxForVoid.invoice_no} berhasil dibatalkan & stok dikembalikan!`);
       setSelectedTxForVoid(null);
-      setRefreshKey((prev) => prev + 1);
     } else {
       error(result.error || 'Gagal membatalkan transaksi.');
     }

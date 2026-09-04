@@ -1,5 +1,8 @@
 'use client';
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 import React, { useState, useMemo } from 'react';
 import { Product, ProductCategory } from '@/types';
 import { BengkelStorage } from '@/lib/storage';
@@ -23,7 +26,7 @@ import { cn } from '@/lib/utils';
 
 export default function ProductsManagementPage() {
   const { success, error } = useToastStore();
-  const { products } = useDataStore();
+  const { products, saveProduct, deleteProduct, updateProductStock } = useDataStore();
   const [search, setSearch] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -39,9 +42,6 @@ export default function ProductsManagementPage() {
   const [formStock, setFormStock] = useState<number>(0);
   const [formMinStock, setFormMinStock] = useState<number>(3);
   const [formUnit, setFormUnit] = useState('Pcs');
-
-  // Trigger re-render on data change
-  const [refreshKey, setRefreshKey] = useState(0);
 
   const filteredProducts = useMemo(() => {
     return products.filter((p) => {
@@ -65,7 +65,7 @@ export default function ProductsManagementPage() {
       }
       return true;
     });
-  }, [products, selectedCategory, search, refreshKey]);
+  }, [products, selectedCategory, search]);
 
   const handleOpenAddModal = () => {
     setEditingProduct(null);
@@ -95,7 +95,7 @@ export default function ProductsManagementPage() {
     setIsModalOpen(true);
   };
 
-  const handleSaveProduct = (e: React.FormEvent) => {
+  const handleSaveProduct = async (e: React.FormEvent) => {
     e.preventDefault();
     const priceNum = parseRupiah(formPrice);
     const costPriceNum = parseRupiah(formCostPrice);
@@ -105,7 +105,7 @@ export default function ProductsManagementPage() {
       return;
     }
 
-    BengkelStorage.saveProduct({
+    await saveProduct({
       id: editingProduct ? editingProduct.id : undefined,
       code: formCode,
       name: formName,
@@ -122,23 +122,20 @@ export default function ProductsManagementPage() {
       editingProduct ? 'Produk berhasil diperbarui!' : 'Produk baru berhasil ditambahkan!'
     );
     setIsModalOpen(false);
-    setRefreshKey((prev) => prev + 1);
   };
 
-  const handleDelete = (id: string, name: string) => {
+  const handleDelete = async (id: string, name: string) => {
     if (confirm(`Apakah Anda yakin ingin menghapus "${name}"?`)) {
-      BengkelStorage.deleteProduct(id);
+      await deleteProduct(id);
       success('Produk berhasil dihapus!');
-      setRefreshKey((prev) => prev + 1);
     }
   };
 
-  const handleQuickStock = (id: string, delta: number) => {
+  const handleQuickStock = async (id: string, delta: number) => {
     const p = products.find((item) => item.id === id);
     if (!p) return;
     const newStock = Math.max(0, p.stock + delta);
-    BengkelStorage.updateProductStock(id, newStock);
-    setRefreshKey((prev) => prev + 1);
+    await updateProductStock(id, newStock);
   };
 
   return (

@@ -1,5 +1,8 @@
 'use client';
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 import React, { useState, useMemo } from 'react';
 import { Product, Vehicle, Transaction } from '@/types';
 import { BengkelStorage } from '@/lib/storage';

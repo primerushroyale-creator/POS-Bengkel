@@ -7,6 +7,7 @@ import { BengkelStorage } from '@/lib/storage';
 import { Car, Search, Plus, User, Phone, Check, ChevronRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useToastStore } from '@/stores/useToastStore';
+import { useDataStore } from '@/stores/useDataStore';
 
 interface VehicleSelectorModalProps {
   isOpen: boolean;
@@ -31,7 +32,7 @@ export const VehicleSelectorModal: React.FC<VehicleSelectorModalProps> = ({
   const [ownerPhone, setOwnerPhone] = useState('');
   const [vehicleType, setVehicleType] = useState('');
 
-  const vehicles = BengkelStorage.getVehicles();
+  const { vehicles, saveVehicle } = useDataStore();
 
   const filteredVehicles = vehicles.filter((v) => {
     const q = search.toLowerCase();
@@ -42,11 +43,11 @@ export const VehicleSelectorModal: React.FC<VehicleSelectorModalProps> = ({
     );
   });
 
-  const handleCreateVehicle = (e: React.FormEvent) => {
+  const handleCreateVehicle = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!plateNumber || !ownerName) return;
 
-    const saved = BengkelStorage.saveVehicle({
+    const saved = await saveVehicle({
       plate_number: plateNumber,
       owner_name: ownerName,
       owner_phone: ownerPhone,

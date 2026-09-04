@@ -1,11 +1,15 @@
 'use client';
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 import React, { useState, useMemo } from 'react';
 import { Vehicle, Transaction } from '@/types';
 import { BengkelStorage } from '@/lib/storage';
 import { formatDateIndo, formatRupiah } from '@/lib/utils';
 import { Modal } from '@/components/ui/Modal';
 import { useToastStore } from '@/stores/useToastStore';
+import { useDataStore } from '@/stores/useDataStore';
 import {
   Car,
   Search,
@@ -22,6 +26,7 @@ import { cn } from '@/lib/utils';
 
 export default function VehiclesManagementPage() {
   const { success, error } = useToastStore();
+  const { vehicles, transactions: allTransactions, saveVehicle } = useDataStore();
   const [search, setSearch] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingVehicle, setEditingVehicle] = useState<Vehicle | null>(null);
@@ -33,10 +38,6 @@ export default function VehiclesManagementPage() {
   const [ownerPhone, setOwnerPhone] = useState('');
   const [vehicleType, setVehicleType] = useState('');
   const [notes, setNotes] = useState('');
-
-  const [refreshKey, setRefreshKey] = useState(0);
-  const vehicles = BengkelStorage.getVehicles();
-  const allTransactions = BengkelStorage.getTransactions();
 
   const filteredVehicles = useMemo(() => {
     return vehicles.filter((v) => {
@@ -51,7 +52,7 @@ export default function VehiclesManagementPage() {
       }
       return true;
     });
-  }, [vehicles, search, refreshKey]);
+  }, [vehicles, search]);
 
   const handleOpenAddModal = () => {
     setEditingVehicle(null);
@@ -73,14 +74,14 @@ export default function VehiclesManagementPage() {
     setIsModalOpen(true);
   };
 
-  const handleSaveVehicle = (e: React.FormEvent) => {
+  const handleSaveVehicle = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!plateNumber || !ownerName) {
       error('Nomor Polisi dan Nama Pemilik wajib diisi!');
       return;
     }
 
-    BengkelStorage.saveVehicle({
+    await saveVehicle({
       id: editingVehicle ? editingVehicle.id : undefined,
       plate_number: plateNumber,
       owner_name: ownerName,
@@ -93,7 +94,6 @@ export default function VehiclesManagementPage() {
       editingVehicle ? 'Data kendaraan diperbarui!' : 'Kendaraan baru berhasil didaftarkan!'
     );
     setIsModalOpen(false);
-    setRefreshKey((prev) => prev + 1);
   };
 
   // Get service history for selected vehicle
