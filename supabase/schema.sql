@@ -422,4 +422,14 @@ BEGIN
 END;
 $$;
 
+-- ==============================================================================
+-- [MIGRATION 20260904] IDEMPOTENCY KEY TO PREVENT DOUBLE INPUT & RACE CONDITIONS
+-- ==============================================================================
+ALTER TABLE transactions 
+ADD COLUMN IF NOT EXISTS client_transaction_id UUID UNIQUE;
+
+CREATE INDEX IF NOT EXISTS idx_transactions_client_id 
+ON transactions(client_transaction_id);
+
+
 

@@ -73,6 +73,7 @@ export interface Transaction {
   change_amount: number;
   payment_method: PaymentMethod;
   status: TransactionStatus;
+  client_transaction_id?: string;
   void_reason?: string;
   voided_at?: string;
   voided_by?: string;
@@ -128,6 +129,7 @@ export interface CheckoutPayload {
   discount_amount: number;
   payment_method: PaymentMethod;
   cash_given: number;
+  client_transaction_id?: string;
   notes?: string;
 }
 

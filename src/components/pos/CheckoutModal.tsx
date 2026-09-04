@@ -17,6 +17,7 @@ import {
   Calculator,
   Receipt,
   Car,
+  Loader2,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -41,12 +42,21 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
   const [cashGiven, setCashGiven] = useState<number>(total);
   const [cashInputRaw, setCashInputRaw] = useState<string>('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [idempotencyKey, setIdempotencyKey] = useState<string>('');
+  const isSubmittingRef = React.useRef(false);
 
   useEffect(() => {
     if (isOpen) {
       setCashGiven(total);
       setCashInputRaw(total.toString());
       setPaymentMethod('tunai');
+      setIsSubmitting(false);
+      isSubmittingRef.current = false;
+      // Generate unique idempotency key per checkout session
+      const key = typeof crypto !== 'undefined' && crypto.randomUUID
+        ? crypto.randomUUID()
+        : 'ctx-' + Date.now() + '-' + Math.random().toString(36).substring(2, 9);
+      setIdempotencyKey(key);
     }
   }, [isOpen, total]);
 
@@ -70,7 +80,10 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
     setCashInputRaw(next.toString());
   };
 
-  const handleProcessCheckout = () => {
+  const handleProcessCheckout = async () => {
+    // 1. Double-click prevention: Immediate synchronous and state lock
+    if (isSubmittingRef.current || isSubmitting) return;
+
     if (items.length === 0) {
       error('Keranjang belanja kosong!');
       return;
@@ -81,9 +94,13 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
       return;
     }
 
+    isSubmittingRef.current = true;
     setIsSubmitting(true);
 
     try {
+      // Simulate network processing buffer for visual feedback & race-condition prevention
+      await new Promise((resolve) => setTimeout(resolve, 350));
+
       const result = BengkelStorage.checkout({
         cashier_id: currentUser?.id,
         cashier_name: currentUser?.name || 'Kasir',
@@ -96,11 +113,13 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
         payment_method: paymentMethod,
         cash_given: cashGiven,
         notes,
+        client_transaction_id: idempotencyKey,
       });
 
       if (!result.success || !result.transaction) {
         error(result.error || 'Gagal memproses transaksi.');
         setIsSubmitting(false);
+        isSubmittingRef.current = false;
         return;
       }
 
@@ -112,6 +131,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
       error(err.message || 'Terjadi kesalahan sistem');
     } finally {
       setIsSubmitting(false);
+      isSubmittingRef.current = false;
     }
   };
 
@@ -257,20 +277,29 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
           </div>
         )}
 
-        {/* Submit Button */}
+        {/* Submit Button with Idempotency & Double Click Lock */}
         <button
           type="button"
           disabled={isSubmitting || isCashInsufficient}
           onClick={handleProcessCheckout}
           className={cn(
-            'w-full py-3.5 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-all min-h-[48px] shadow-soft',
+            'w-full py-3.5 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-all min-h-[48px] shadow-soft select-none',
             isCashInsufficient || isSubmitting
               ? 'bg-slate-200 text-slate-400 cursor-not-allowed'
               : 'bg-indigo-600 hover:bg-indigo-700 active:scale-[0.99] text-white shadow-indigo-200'
           )}
         >
-          <CheckCircle2 className="w-5 h-5" />
-          <span>{isSubmitting ? 'Memproses...' : 'Selesaikan Transaksi & Cetak'}</span>
+          {isSubmitting ? (
+            <>
+              <Loader2 className="w-5 h-5 animate-spin text-slate-500" />
+              <span>Memproses Pembayaran...</span>
+            </>
+          ) : (
+            <>
+              <CheckCircle2 className="w-5 h-5" />
+              <span>Selesaikan Transaksi & Cetak</span>
+            </>
+          )}
         </button>
       </div>
     </Modal>

@@ -735,6 +735,18 @@ export const BengkelStorage = {
       }
     }
 
+    const allTx = BengkelStorage.getTransactions();
+
+    // 0. IDEMPOTENCY CHECK: Jika client_transaction_id sudah pernah diproses, kembalikan transaksi yang ada
+    if (payload.client_transaction_id) {
+      const existingTx = allTx.find(
+        (t) => t.client_transaction_id === payload.client_transaction_id
+      );
+      if (existingTx) {
+        return { success: true, transaction: existingTx };
+      }
+    }
+
     const products = BengkelStorage.getProducts();
 
     // 1. ATOMIC VALIDATION: Check stock sufficiency for ALL items before deducting anything
@@ -766,7 +778,6 @@ export const BengkelStorage = {
     setItem(KEYS.PRODUCTS, products);
 
     // 3. GENERATE TRANSACTION
-    const allTx = BengkelStorage.getTransactions();
     const invoiceNo = generateInvoiceNumber(allTx.length + 1);
     const subtotalSum = payload.items.reduce((sum, item) => sum + item.subtotal, 0);
     const totalAmount = Math.max(0, subtotalSum - (payload.discount_amount || 0));
@@ -777,6 +788,7 @@ export const BengkelStorage = {
 
     const newTransaction: Transaction = {
       id: newTxId,
+      client_transaction_id: payload.client_transaction_id,
       invoice_no: invoiceNo,
       cashier_id: payload.cashier_id,
       cashier_name: payload.cashier_name || 'Kasir',
