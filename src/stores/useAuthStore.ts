@@ -25,18 +25,7 @@ function syncRoleCookie(role?: Role) {
   }
 }
 
-// Default initial user for instant access: Agus Prayitno (Kasir)
-const DEFAULT_USER: User = {
-  id: '11111111-1111-1111-1111-111111111111',
-  name: 'Agus Prayitno',
-  role: 'kasir',
-  pin_hash: '1234',
-  phone: '081234567801',
-  is_active: true,
-  created_at: '2026-09-01T08:00:00Z',
-};
-
-const getInitialUser = (): User => {
+const getInitialUser = (): User | null => {
   if (typeof window !== 'undefined') {
     try {
       const savedUser = window.localStorage.getItem('bengkel_current_user');
@@ -47,14 +36,16 @@ const getInitialUser = (): User => {
       }
     } catch {}
   }
-  syncRoleCookie(DEFAULT_USER.role);
-  return DEFAULT_USER;
+  syncRoleCookie(undefined);
+  return null;
 };
 
-export const useAuthStore = create<AuthState>((set, get) => ({
-  currentUser: getInitialUser(),
-  isAuthenticated: true,
-  isPinModalOpen: false,
+export const useAuthStore = create<AuthState>((set, get) => {
+  const initialUser = getInitialUser();
+  return {
+    currentUser: initialUser,
+    isAuthenticated: !!initialUser,
+    isPinModalOpen: false,
 
   loginWithPin: (pin: string) => {
     const user = BengkelStorage.findUserByPin(pin);
@@ -101,5 +92,6 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     if (!user) return false;
     return roles.includes(user.role);
   },
-}));
+  };
+});
 

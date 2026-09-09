@@ -3,9 +3,23 @@ import type { NextRequest } from 'next/server';
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
-  const role = request.cookies.get('bengkel_role')?.value || 'kasir';
+  const role = request.cookies.get('bengkel_role')?.value;
 
-  // 1. Root route handling
+  // 1. If no role (not logged in) and not on /login, redirect to /login
+  if (!role && pathname !== '/login') {
+    const url = request.nextUrl.clone();
+    url.pathname = '/login';
+    return NextResponse.redirect(url);
+  }
+
+  // 1b. If logged in and on /login, redirect to app
+  if (role && pathname === '/login') {
+    const url = request.nextUrl.clone();
+    url.pathname = role === 'mekanik' ? '/admin/work-orders' : '/pos';
+    return NextResponse.redirect(url);
+  }
+
+  // 2. Root route handling
   if (pathname === '/') {
     const url = request.nextUrl.clone();
     if (role === 'mekanik') {

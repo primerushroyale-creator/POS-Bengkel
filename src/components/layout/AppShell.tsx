@@ -64,6 +64,15 @@ export const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) 
     }
   }, [isAllowed, pathname, userRole, redirectTarget, deniedMessage, router, error]);
 
+  if (pathname === '/login') {
+    return (
+      <div className="min-h-screen bg-[#f8fafc] text-slate-900 font-sans antialiased">
+        {children}
+        <ToastContainer />
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-[#f8fafc] text-slate-900 flex flex-col font-sans antialiased">
       <Navbar />
