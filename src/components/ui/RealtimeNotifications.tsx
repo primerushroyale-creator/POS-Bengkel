@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import React, { useEffect } from 'react';
 import { useToastStore } from '@/stores/useToastStore';
@@ -63,7 +63,7 @@ export const RealtimeNotifications: React.FC = () => {
       const amountStr = formatRupiah(Number(newTx.total_amount));
       
       success(
-        ${newTx.invoice_no} •  • ,
+        `${newTx.invoice_no} • ${amountStr} • ${methodStr}`,
         '🎉 Pembayaran Baru Masuk!'
       );
     };
