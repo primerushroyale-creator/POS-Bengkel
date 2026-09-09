@@ -179,8 +179,13 @@ export default function TransactionsReportPage() {
           </thead>
           <tbody className="divide-y divide-slate-100">
             {filteredTransactions.length > 0 ? (
-              filteredTransactions.map((tx) => (
-                <tr key={tx.id} className="hover:bg-slate-50/50 transition-colors">
+              filteredTransactions.map((tx) => {
+                const isNew = typeof window !== 'undefined' && (new Date().getTime() - new Date(tx.created_at).getTime() < 3000);
+                return (
+                <tr key={tx.id} className={cn(
+                  "transition-all duration-1000",
+                  isNew ? "bg-emerald-50/70" : "hover:bg-slate-50/50"
+                )}>
                   <td className="px-4 py-3.5">
                     <span className="font-mono font-bold text-slate-800 block">
                       {tx.invoice_no}
@@ -248,7 +253,8 @@ export default function TransactionsReportPage() {
                     </div>
                   </td>
                 </tr>
-              ))
+                );
+              })
             ) : (
               <tr>
                 <td colSpan={6} className="text-center py-12 text-slate-400">
@@ -264,10 +270,15 @@ export default function TransactionsReportPage() {
       {/* Transactions Mobile Cards */}
       <div className="md:hidden space-y-3">
         {filteredTransactions.length > 0 ? (
-          filteredTransactions.map((tx) => (
+          filteredTransactions.map((tx) => {
+            const isNew = typeof window !== 'undefined' && (new Date().getTime() - new Date(tx.created_at).getTime() < 3000);
+            return (
             <div
               key={tx.id}
-              className="p-4 bg-white rounded-2xl border border-slate-200/80 shadow-soft-sm space-y-3"
+              className={cn(
+                "p-4 rounded-2xl border shadow-soft-sm space-y-3 transition-all duration-1000",
+                isNew ? "bg-emerald-50/70 border-emerald-200" : "bg-white border-slate-200/80"
+              )}
             >
               <div className="flex items-start justify-between">
                 <div>
@@ -329,7 +340,8 @@ export default function TransactionsReportPage() {
                 </div>
               </div>
             </div>
-          ))
+            );
+          })
         ) : (
           <div className="text-center py-12 text-slate-400 bg-white rounded-2xl border border-slate-200/80 p-6">
             <Receipt className="w-8 h-8 mx-auto mb-2 opacity-40" />

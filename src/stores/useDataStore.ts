@@ -462,6 +462,36 @@ export const useDataStore = create<DataStoreState>((set, get) => ({
         )
         .on(
           'postgres_changes',
+          { event: 'INSERT', schema: 'public', table: 'transactions' },
+          (payload) => {
+            if (payload.eventType === 'INSERT') {
+              const newTx = payload.new;
+              if (newTx.status === 'completed') {
+                // Trigger event for UI to play sound and show toast
+                if (typeof window !== 'undefined') {
+                  const event = new CustomEvent('bengkel_new_transaction', { detail: newTx });
+                  window.dispatchEvent(event);
+                }
+              }
+              // Data sync will happen via refreshData which is called below anyway if needed,
+              // or we can optimistically insert it here.
+              // Wait, the regular refresh logic will fetch this. But let's insert it locally if missing.
+              set((state) => {
+                const exists = state.transactions.some((t) => t.id === newTx.id);
+                if (!exists) {
+                  // For a complete transaction we actually need its details, 
+                  // which are not in this payload. So we should just trigger a refresh.
+                  // But we don't want to spam refreshData.
+                  // We'll let refreshData run (we can call it explicitly).
+                  setTimeout(() => get().refreshData(), 500);
+                }
+                return state;
+              });
+            }
+          }
+        )
+        .on(
+          'postgres_changes',
           { event: '*', schema: 'public', table: 'vehicles' },
           (payload) => {
             if (payload.eventType === 'INSERT' || payload.eventType === 'UPDATE') {

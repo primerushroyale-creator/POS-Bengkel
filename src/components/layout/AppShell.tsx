@@ -11,6 +11,7 @@ import { useAuthStore } from '@/stores/useAuthStore';
 import { useToastStore } from '@/stores/useToastStore';
 import { useDataStore } from '@/stores/useDataStore';
 import { ShieldAlert } from 'lucide-react';
+import { RealtimeNotifications } from '@/components/ui/RealtimeNotifications';
 
 export const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const pathname = usePathname();
@@ -93,6 +94,7 @@ export const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) 
       <MobileBottomNav />
       <PinPadModal />
       <ToastContainer />
+      <RealtimeNotifications />
     </div>
   );
 };
